@@ -1,6 +1,7 @@
 import { createHmac, randomBytes } from "node:crypto";
 import JWT from "jsonwebtoken";
 import { prismaClient } from "../lib/db";
+import cloudinary from 'cloudinary';
 
 const JWT_SECRET = "$123456789";
 
@@ -104,7 +105,7 @@ class UserService {
       success: true,
       message: "Token generated successfully",
       statusCode: 200,
-      data: { token:token, ...user},
+      data: { token: token, ...user },
     };
   }
 
@@ -158,11 +159,11 @@ class UserService {
     payload: UpdateAccountDetailsPayload
   ): Promise<CommonResponse<{ user: any }>> {
     const { userId, email, lastName } = payload;
-  
+
     const user = await prismaClient.user.findUnique({
-      where: { id: userId }, 
+      where: { id: userId },
     });
-  
+
     if (!user) {
       return {
         success: false,
@@ -170,12 +171,12 @@ class UserService {
         statusCode: 404,
       };
     }
-  
+
     if (email) {
       const emailExists = await prismaClient.user.findUnique({
         where: { email },
       });
-  
+
       if (emailExists && emailExists.id !== userId) {
         return {
           success: false,
@@ -184,21 +185,21 @@ class UserService {
         };
       }
     }
-  
+
     try {
-      const updatedUser:any = await prismaClient.user.update({
+      const updatedUser: any = await prismaClient.user.update({
         where: { id: userId },
         data: {
-          email: email || undefined, 
+          email: email || undefined,
           lastName: lastName || undefined,
         },
       });
-  
+
       return {
         success: true,
         message: "Account details updated",
         statusCode: 200,
-        data: updatedUser ,
+        data: updatedUser,
       };
     } catch (error) {
       return {
@@ -208,7 +209,16 @@ class UserService {
       };
     }
   }
-  
+
+  public static async uploadImage(stream: any, filename: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.v2.uploader.upload_stream({ folder: 'user_profile_images' }, (error, result) => {
+        if (error) reject(error);
+        resolve(result);
+      });
+      stream.pipe(uploadStream);
+    });
+  }
 }
 
 export default UserService;

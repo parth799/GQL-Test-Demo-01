@@ -1,10 +1,15 @@
 export const typeDefs = `#graphql
+    type Image {
+        publicId: String!
+        url: String!
+    }
+
     type User {
         id: ID
         firstName: String
         lastName: String
         email: String
-        profileImageURL: String
+        profileImage: Image 
         token: String
     }
 
