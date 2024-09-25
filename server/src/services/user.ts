@@ -2,6 +2,8 @@ import { createHmac, randomBytes } from "node:crypto";
 import JWT from "jsonwebtoken";
 import { prismaClient } from "../lib/db";
 import cloudinary from 'cloudinary';
+import path from 'path';
+import fs from 'fs/promises';
 
 const JWT_SECRET = "$123456789";
 
@@ -10,6 +12,7 @@ export interface CreateUserPayload {
   lastName?: string;
   email: string;
   password: string;
+  avatarUrl: string;
 }
 
 export interface GetUserTokenPayload {
@@ -55,20 +58,23 @@ class UserService {
   public static async createUser(
     payload: CreateUserPayload
   ): Promise<CommonResponse<{ user: any }>> {
-    const { firstName, lastName, email, password } = payload;
+    const { firstName, lastName, email, password, avatarUrl } = payload;
+
     const salt = randomBytes(32).toString("hex");
     const hashedPassword = UserService.generateHash(salt, password);
 
     try {
-      const newUser: any = await prismaClient.user.create({
+      const newUser:any = await prismaClient.user.create({
         data: {
           firstName,
           lastName,
           email,
           salt,
           password: hashedPassword,
+          avatar: {url : avatarUrl}
         },
       });
+
       return {
         success: true,
         message: "User created successfully",

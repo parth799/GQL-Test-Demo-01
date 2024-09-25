@@ -1,3 +1,4 @@
+import { finished } from "stream/promises";
 import UserService from "../../services/user";
 import {
   CreateUserPayload,
@@ -43,10 +44,7 @@ const queries = {
 };
 
 const mutations = {
-  createUser: async (
-    _: any,
-    payload: CreateUserPayload
-  ): Promise<CommonResponse<any>> => {
+  createUser: async (_: any,payload: CreateUserPayload): Promise<CommonResponse<any>> => {
     return await UserService.createUser(payload);
   },
 
@@ -85,6 +83,19 @@ const mutations = {
       userId: context.user.id,
     });
   },
+
+  singleUpload: async (parent:any, { file }:any) => {
+    const { createReadStream, filename, mimetype, encoding } = await file;
+
+    const stream = createReadStream();
+
+    const out = require('fs').createWriteStream('local-file-output.txt');
+    stream.pipe(out);
+    await finished(out);
+
+    return { filename, mimetype, encoding };
+  },
+
 };
 
 export const resolvers = { queries, mutations };

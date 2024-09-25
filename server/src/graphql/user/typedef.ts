@@ -1,6 +1,6 @@
 export const typeDefs = `#graphql
+    scalar Upload
     type Image {
-        publicId: String!
         url: String!
     }
 
@@ -9,7 +9,7 @@ export const typeDefs = `#graphql
         firstName: String
         lastName: String
         email: String
-        profileImage: Image 
+        avatar: Image 
         token: String
     }
 
@@ -19,6 +19,12 @@ export const typeDefs = `#graphql
         statusCode: Int
         data: User
     }
+
+    type File {
+    filename: String!
+    mimetype: String!
+    encoding: String!
+  }
 
     scalar JSON
 `;

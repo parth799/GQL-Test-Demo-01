@@ -2,8 +2,8 @@ import express from "express";
 import { expressMiddleware } from "@apollo/server/express4";
 import createApolloGraphqlServer from "./graphql";
 import UserService from "./services/user";
-import fileUpload from "express-fileupload";
 import cloudinary from "cloudinary";
+import  graphqlUploadExpress from "graphql-upload"
 
 cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -13,14 +13,10 @@ cloudinary.v2.config({
 
 async function startServer() {
   const app = express();
+  // app.use(graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 1 }));
   const PORT = Number(process.env.PORT) || 3000;
   app.use(express.json());
-  app.use(
-    fileUpload({
-      useTempFiles: true,
-      tempFileDir: "/tmp/",
-    })
-  );
+  app.use('/public', express.static('public'));
   const graphqlServer = await createApolloGraphqlServer();
 
   app.get("/test", (req, res) => {
