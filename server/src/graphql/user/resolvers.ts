@@ -1,77 +1,48 @@
-import UserService, { ChangePasswordPayload, CreateUserPayload } from "../../services/user";
+import UserService from "../../services/user";
+import {
+  CreateUserPayload,
+  ChangePasswordPayload,
+  UpdateAccountDetailsPayload,
+  GetUserTokenPayload,
+  CommonResponse,
+  Context
+} from "../../services/user";
 
 const queries = {
-  getUserToken: async (
-    _: any,
-    payload: { email: string; password: string },
-  ) => {
-    const token = await UserService.getUserToken({
-      email: payload.email,
-      password: payload.password,
-    });    
-    return token;
-  },
-  getCurrentLoggedInUser: async (_: any, parameters: any, context: any) => {
-    if (context && context.user) {
-      const id = context.user.id;
-      const user = await UserService.getUserById(id);
-      return user;
+  userLogin: async (_: any, payload: GetUserTokenPayload & { includeUserData?: boolean }): Promise<CommonResponse<{ token: string, user?: any }>> => {
+    return await UserService.userLogin(payload);
+},
+
+  getCurrentLoggedInUser: async (_: any, __: any, context: Context): Promise<CommonResponse<{ user: any }>> => {
+    if (!context || !context.user) {
+      return { success: false, message: "Please log in first", statusCode: 401 };
     }
-    throw new Error("pleace login first");
+    
+    const user:any = await UserService.getUserById(context.user.id);
+    if (!user) return { success: false, message: "User not found", statusCode: 404 };
+
+    return { success: true, message: "User fetched successfully", statusCode: 200, data: user };
   },
 };
 
 const mutations = {
-  createUser: async (_: any, payload: CreateUserPayload) => {
-    const res = await UserService.createUser(payload);
-    return res.id;
+  createUser: async (_: any, payload: CreateUserPayload): Promise<CommonResponse<any>> => {
+    return await UserService.createUser(payload);
   },
 
-  changePassword: async (_: any, payload: ChangePasswordPayload, context: any) => {
+  changePassword: async (_: any, payload: ChangePasswordPayload, context: Context): Promise<CommonResponse<null>> => {
     if (!context || !context.user) {
-      return {
-        success: false,
-        message: "Please login first.",
-        statusCode: 401,
-      };
+      return { success: false, message: "Please log in first", statusCode: 401 };
     }
-
-    const userId = context.user.id;
-
-    try {
-      const result = await UserService.changePassword({ ...payload, userId });
-      if (result.statusCode === 400) {
-        return {
-          success: false,
-          message: result.message,
-          statusCode: result.statusCode,
-        };
-      }
-
-      return {
-        success: true,
-        message: "Password changed successfully!",
-        statusCode: 200,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: "An error occurred while changing the password.",
-        statusCode: 500,
-      };
-    }
+    return await UserService.changePassword({ ...payload, userId: context.user.id });
   },
 
-  updateAccountDetails: async (_: any, payload: { email?: string; lastName?: string }, context: any) => {
+  updateAccountDetails: async (_: any, payload: UpdateAccountDetailsPayload, context: Context): Promise<CommonResponse<{ user: any }>> => {
     if (!context || !context.user) {
-      throw new Error("Please login first");
+      return { success: false, message: "Please log in first", statusCode: 401 };
     }
-
-    const userId = context.user.id;
-    const res = await UserService.updateAccountDetails({ userId, ...payload });
-    return res;
-  },
+    return await UserService.updateAccountDetails({ ...payload, userId: context.user.id });
+},
 };
-
 
 export const resolvers = { queries, mutations };

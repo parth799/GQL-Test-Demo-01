@@ -1,15 +1,19 @@
 export const typeDefs = `#graphql
     type User {
-        id: ID!
-        firstName: String!
-        lastName: String!
-        email: String!
+        id: ID
+        firstName: String
+        lastName: String
+        email: String
         profileImageURL: String
+        token: String
     }
 
-    type ChangePasswordResponse {
-        success: Boolean
+    type CommonResponse {
+        success: Boolean!
         message: String
         statusCode: Int
+        data: User
     }
+
+    scalar JSON
 `;
